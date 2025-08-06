@@ -1,6 +1,6 @@
 from utils.loader import load_markdown_documents  
 from utils.graph import workflow  
-from tools.twitter import twitter_post 
+from tools.twitter import clean_tweet_text, twitter_post 
 from config.model import gemini_model
 from langchain_core.messages import HumanMessage
 from datetime import datetime
@@ -42,13 +42,13 @@ if __name__ == "__main__":
     print("🤖 Model invoking tool…")
     
     response = llm.invoke([HumanMessage(content=f"Post the following tweet:\n{tweet}")])
-    print("RESPONSE: ", response)
+    # print("RESPONSE: ", response)
     
     func = response.additional_kwargs.get("function_call")
     if func:
         final_post = json.loads(func["arguments"])
-        print("final_post: ", final_post, type(final_post))
-        post = final_post["final_post"]
+        # print("final_post: ", final_post, type(final_post))
+        post = clean_tweet_text(final_post["final_post"])
         result = twitter_post.invoke({"final_post": post})
         print("🧾 Twitter Reply:", result)
     else:

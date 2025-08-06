@@ -5,36 +5,42 @@ from langchain_core.messages import SystemMessage, HumanMessage
 structured_llm = gemini_model().with_structured_output(TweetEvaluation)
 
 def generate_tweet(state: TweetState) -> TweetState:
-    messages = [SystemMessage(content="""
-You are a tweet composer for a developer who shares daily learning updates.
+    messages = [
+        SystemMessage(content=f"""
+You are a tweet composer for a developer sharing daily learning updates.
 
-Your task:
-- Begin with: "Day {n}: Today I learned about"
-- Summarize each key topic as a bullet point using "-"
-- Each bullet point should be one concise line
-- Use a formal and informative tone
-- Do not use emojis, hashtags, or casual phrases
-- The entire output must stay under 280 characters
-- Output only the tweet. Do not include explanations or multiple versions.
+Your job:
+- Start with: "Day {state['iteration'] + 1}: Today I learned"
+- Write a short summary in 1–2 natural sentences
+- DO NOT use:
+  - Emojis
+  - Bullet points, lists, or hashtags
+  - Casual language, slang, or overly formal phrasing
+  - Repetitive or robotic phrases
+  - Promotional tone
 
-Make sure the tweet is easy to read and valuable for others following the developer’s learning journey.
-"""),    
-    HumanMessage(content=f"""
-These are my Obsidian notes for today:
+Goal:
+Make it sound like a real developer briefly sharing a new concept or insight.
+
+Keep the tweet below 280 characters. Return ONLY the tweet.
+"""),
+        HumanMessage(content=f"""
+Here are today's learning notes:
 
 {state['notes']}
 
-Please:
-1. Summarize the key points I learned.
-2. Create a tweet starting with "Day {state['iteration'] + 1}: Today I learned about"
-3. Use bullet points and one-line summaries, all within 280 characters.
-4. No emojis or hashtags. Keep it professional and concise.
+Please write a tweet starting with:
+"Day {state['iteration'] + 1}: Today I learned"
+In 1–2 sentences, avoid bullets, emojis, or hashtags.
 """)
-
     ]
+
     print("Generating tweet...")
     response = gemini_model().invoke(messages).content
-    return {"tweet": response, "tweet_history": [response]}
+    return {
+        "tweet": response,
+        "tweet_history": [response]
+    }
 
 def evaluate_tweet(state: TweetState) -> TweetState:
     """Evaluate learning tweet generated from Obsidian notes"""
